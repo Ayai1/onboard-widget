@@ -4,16 +4,23 @@ Onboard Widget is a config-driven identity onboarding flow that can be mounted i
 
 The demo uses synthetic values. Its selfie step captures a photo and displays basic lighting and blur hints. The server's default `ImageCheck` returns `not_run`.
 
+## Hosted demo
+
+[Open the hosted demo](https://ayai1.github.io/onboard-widget/).
+
+The hosted demo uses a browser-local API mock. It generates synthetic session and submission references, and the funnel page displays synthetic counts. Captured images and form details are not sent to a server by the hosted demo. Browser camera access still requires user permission.
+
 ## Repository layout
 
-| Path                       | Contents                                                                           |
-| -------------------------- | ---------------------------------------------------------------------------------- |
-| `packages/widget`          | React 18 and TypeScript widget, config schema, camera flow, SDK and custom element |
-| `apps/demo`                | Vite host app with live theme and locale selection and the funnel page             |
-| `server`                   | FastAPI API, SQLite metadata, local upload storage, seed script and pytest suite   |
-| `e2e`                      | Playwright browser scenarios                                                       |
-| `scripts`                  | Built bundle gzip size check                                                       |
-| `.github/workflows/ci.yml` | GitHub Actions lint, typecheck, unit, API, browser and build jobs                  |
+| Path                                | Contents                                                                           |
+| ----------------------------------- | ---------------------------------------------------------------------------------- |
+| `packages/widget`                   | React 18 and TypeScript widget, config schema, camera flow, SDK and custom element |
+| `apps/demo`                         | Vite host app with live theme and locale selection and the funnel page             |
+| `server`                            | FastAPI API, SQLite metadata, local upload storage, seed script and pytest suite   |
+| `e2e`                               | Playwright browser scenarios                                                       |
+| `scripts`                           | Built bundle gzip size check                                                       |
+| `.github/workflows/ci.yml`          | GitHub Actions lint, typecheck, unit, API, browser and build jobs                  |
+| `.github/workflows/deploy-demo.yml` | GitHub Pages build and deployment workflow                                         |
 
 ## Quickstart
 
@@ -232,19 +239,23 @@ npm run size:check
 
 ## Tested environments
 
-| Device/browser | OS  | Result | Date |
-| -------------- | --- | ------ | ---- |
-|                |     |        |      |
+| Device/browser                       | OS                            | Result                                                            | Date       |
+| ------------------------------------ | ----------------------------- | ----------------------------------------------------------------- | ---------- |
+| Playwright Chromium with fake camera | Windows 11 (10.0.26300)       | 4 browser tests passed with synthetic form data and media         | 2026-11-19 |
+| Playwright Chromium                  | Ubuntu 26.04 (GitHub Actions) | 4 E2E scenarios passed                                            | 2026-11-19 |
+| Playwright WebKit                    | Ubuntu 26.04 (GitHub Actions) | RTL and 320-pixel scenarios passed; 2 Chromium-only cases skipped | 2026-11-19 |
+| iOS Safari on a physical device      | No iOS device available       | Not tested; no physical iOS device was connected                  | 2026-11-19 |
+| Chrome on a low-end Android device   | No Android device available   | Not tested; no physical Android device was connected              | 2026-11-19 |
 
 ## Measured results
 
-| Metric                          | Value |
-| ------------------------------- | ----- |
-| Gzip bundle size                |       |
-| Lighthouse performance (mobile) |       |
-| Unit test count                 |       |
-| E2E test count                  |       |
-| Test coverage                   |       |
+| Metric                          | Value                                                                          |
+| ------------------------------- | ------------------------------------------------------------------------------ |
+| Gzip bundle size                | ESM startup 37.39 KB; UMD 40.68 KB; lazy camera chunk 3.69 KB                  |
+| Lighthouse performance (mobile) | 100/100 (Lighthouse 13.6.0, hosted demo, 2026-11-19)                           |
+| Unit test count                 | 45 Vitest tests; 8 pytest API tests                                            |
+| E2E test count                  | 6 passed in CI (4 Chromium, 2 WebKit); 2 WebKit Chromium-only cases skipped    |
+| Test coverage                   | 55.71% statements, 47.16% branches, 50.00% functions, 57.21% lines (Vitest V8) |
 
 ## Limitations
 
