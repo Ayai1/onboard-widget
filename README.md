@@ -220,6 +220,7 @@ npx playwright install chromium webkit
 npm run lint
 npm run typecheck
 npm run test:widget
+npm run test:coverage
 npm run test:server
 npm run test:e2e
 npm run test:all

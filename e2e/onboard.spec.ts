@@ -46,6 +46,11 @@ test("shows the upload fallback after camera permission is denied", async ({
     "The permission override uses Chromium mediaDevices.",
   );
   await page.goto("/");
+  await page.getByLabel("Full name").fill("Sample Person");
+  await page.getByLabel("Date of birth").fill("1990-01-02");
+  await page.getByLabel("Country").selectOption("IN");
+  await page.getByLabel("Email address").fill("sample@example.test");
+  await page.getByRole("button", { name: "Continue" }).click();
   await page.context().clearPermissions();
   await page.locator("#widget-mount").evaluate((element) => {
     const mediaDevices = navigator.mediaDevices;

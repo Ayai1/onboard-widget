@@ -156,12 +156,16 @@ export function validateDetails(details: DetailsData): Record<string, string> {
 }
 
 function isValidDateOfBirth(value: string): boolean {
+  const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!parts) return false;
   const date = new Date(`${value}T00:00:00`);
   const today = new Date();
   today.setHours(23, 59, 59, 999);
   return (
     Number.isFinite(date.getTime()) &&
-    date.toISOString().slice(0, 10) === value &&
+    date.getFullYear() === Number(parts[1]) &&
+    date.getMonth() + 1 === Number(parts[2]) &&
+    date.getDate() === Number(parts[3]) &&
     date <= today
   );
 }

@@ -5,6 +5,7 @@ import {
   type WidgetEvent,
   type WidgetHandle,
 } from "@onboard/widget";
+import { demoApiBaseUrl, hostedDemoMode } from "./demoApi";
 
 const themes = {
   ocean: {
@@ -36,13 +37,13 @@ export default function DemoApp() {
       steps: ["details", "id_capture", "selfie", "review"],
       theme: themes[themeName],
       locale,
-      api: { baseUrl: "http://127.0.0.1:8000", publicKey: "demo-public-key" },
+      api: { baseUrl: demoApiBaseUrl(), publicKey: "demo-public-key" },
       camera: {
         idMaxDimension: 1600,
         selfieMaxDimension: 1200,
         jpegQuality: 0.82,
       },
-      analytics: { enabled: true },
+      analytics: { enabled: !hostedDemoMode },
     }),
     [locale, themeName],
   );
@@ -75,7 +76,12 @@ export default function DemoApp() {
     appliedConfig.current = config;
   }, [config]);
 
-  if (window.location.pathname === "/funnel") return <FunnelPage />;
+  const homePath = import.meta.env.BASE_URL;
+  const funnelPath = new URL("funnel", window.location.origin + homePath)
+    .pathname;
+  const funnelQuery = new URLSearchParams(window.location.search).get("page");
+  if (window.location.pathname === funnelPath || funnelQuery === "funnel")
+    return <FunnelPage />;
 
   return (
     <main className="demo-page" dir={locale === "ar" ? "rtl" : "ltr"}>
@@ -84,9 +90,15 @@ export default function DemoApp() {
           <p className="eyebrow">Embed demo</p>
           <h1>Onboard Widget</h1>
         </div>
-        <a href="/funnel">View funnel</a>
+        <a href={`${homePath}?page=funnel`}>View funnel</a>
       </header>
       <p className="demo-notice">Demo only - do not upload real documents</p>
+      {hostedDemoMode && (
+        <p className="demo-notice">
+          The hosted demo simulates submissions in this browser. Captures are
+          not sent to a server.
+        </p>
+      )}
       <section className="demo-controls" aria-label="Widget settings">
         <label>
           Theme
@@ -158,7 +170,7 @@ function FunnelPage() {
 
   useEffect(() => {
     let active = true;
-    fetch("http://127.0.0.1:8000/funnel")
+    fetch(`${demoApiBaseUrl()}/funnel`)
       .then(async (response) => {
         if (!response.ok)
           throw new Error(`Funnel request failed (${response.status}).`);
@@ -190,8 +202,13 @@ function FunnelPage() {
           <p className="eyebrow">Analytics</p>
           <h1>Onboarding funnel</h1>
         </div>
-        <a href="/">Return to demo</a>
+        <a href={import.meta.env.BASE_URL}>Return to demo</a>
       </header>
+      {hostedDemoMode && (
+        <p className="demo-notice">
+          Synthetic funnel counts are not collected from visitors.
+        </p>
+      )}
       {loading && <p role="status">Loading funnel…</p>}
       {error && (
         <p className="demo-error" role="alert">

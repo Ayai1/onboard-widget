@@ -85,4 +85,15 @@ describe("flow state", () => {
       email: "invalidEmail",
     });
   });
+
+  it("accepts a valid date of birth in the local timezone", () => {
+    expect(
+      validateDetails({
+        fullName: "Sample Person",
+        dateOfBirth: "1990-01-02",
+        country: "IN",
+        email: "sample@example.test",
+      }),
+    ).toEqual({});
+  });
 });

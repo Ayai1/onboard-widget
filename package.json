@@ -14,6 +14,7 @@
     "format:check": "prettier --check .",
     "typecheck": "npm run typecheck --workspace @onboard/widget && npm run typecheck --workspace @onboard/demo && tsc --noEmit -p tsconfig.e2e.json",
     "test:widget": "npm run test --workspace @onboard/widget",
+    "test:coverage": "npm run test:coverage --workspace @onboard/widget",
     "test:server": "python -m pytest server/tests",
     "test:e2e": "playwright test",
     "test:all": "npm run test:widget && npm run test:server && npm run test:e2e",
