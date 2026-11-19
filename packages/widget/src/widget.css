@@ -26,6 +26,9 @@
 .ow-root .ow-primary { color: #fff; background: var(--ow-primary, #2459d3); border: 0; border-radius: .5rem; padding: .7rem 1.1rem; }
 .ow-root .ow-muted { color: inherit; background: transparent; border: 1px solid currentColor; border-radius: .5rem; padding: .7rem 1.1rem; }
 .ow-root .ow-step { animation: ow-enter 160ms ease-out; }
+.ow-root .ow-progress { display: flex; flex-wrap: wrap; gap: .35rem 1rem; margin-block-end: 1.25rem; color: #536078; font-size: .875rem; }
+.ow-root .ow-progress [aria-current="step"] { color: var(--ow-primary, #2459d3); font-weight: 700; }
+.ow-root .ow-back { margin-block-end: 1rem; }
 .ow-root [dir="rtl"] .ow-actions { flex-direction: row-reverse; }
 @keyframes ow-enter { from { opacity: .65; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) { .ow-root .ow-step { animation: none; } }
