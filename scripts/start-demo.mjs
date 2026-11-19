@@ -8,10 +8,14 @@ const args = npmAvailable
   ? ["run", "dev"]
   : ["dlx", "npm@latest", "run", "dev"];
 
-const child = spawn(command, args, {
-  stdio: "inherit",
-  shell: process.platform === "win32",
-});
+const child =
+  process.platform === "win32"
+    ? spawn(
+        process.env.ComSpec ?? "cmd.exe",
+        ["/d", "/s", "/c", `${command} ${args.join(" ")}`],
+        { stdio: "inherit" },
+      )
+    : spawn(command, args, { stdio: "inherit" });
 
 for (const signal of ["SIGINT", "SIGTERM"]) {
   process.on(signal, () => child.kill(signal));
