@@ -17,7 +17,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: npm ci
-      - run: python -m pip install -e "server[dev]"
+      - run: python -m pip install -r server/requirements.txt
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run test:widget

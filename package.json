@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "npm run dev --workspace @onboard/demo",
     "build": "npm run build --workspace @onboard/widget && npm run build --workspace @onboard/demo",
-    "lint": "eslint .",
+    "lint": "eslint . && prettier --check . && python -m ruff check server",
     "format:check": "prettier --check .",
     "typecheck": "npm run typecheck --workspace @onboard/widget && npm run typecheck --workspace @onboard/demo",
     "test:widget": "npm run test --workspace @onboard/widget",
