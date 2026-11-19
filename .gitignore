@@ -1,0 +1,13 @@
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
+.pytest_cache/
+.ruff_cache/
+__pycache__/
+*.py[cod]
+server/uploads/
+server/onboard.db
+.venv/
+.env
