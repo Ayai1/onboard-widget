@@ -1,6 +1,7 @@
 {
   "name": "onboard-widget",
   "private": true,
+  "type": "module",
   "version": "0.1.0",
   "workspaces": [
     "packages/*",
@@ -9,9 +10,9 @@
   "scripts": {
     "dev": "npm run build --workspace @onboard/widget && npm run dev --workspace @onboard/demo",
     "build": "npm run build --workspace @onboard/widget && npm run build --workspace @onboard/demo",
-    "lint": "eslint . && prettier --check . && python -m ruff check server",
+    "lint": "eslint . && prettier --check . && python -m ruff check server && python -m ruff format --check server",
     "format:check": "prettier --check .",
-    "typecheck": "npm run typecheck --workspace @onboard/widget && npm run typecheck --workspace @onboard/demo",
+    "typecheck": "npm run typecheck --workspace @onboard/widget && npm run typecheck --workspace @onboard/demo && tsc --noEmit -p tsconfig.e2e.json",
     "test:widget": "npm run test --workspace @onboard/widget",
     "test:server": "python -m pytest server/tests",
     "test:e2e": "playwright test",
@@ -21,18 +22,18 @@
     "server:seed": "python -m server.seed"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.1",
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.65.1",
     "@types/react": "^18.3.27",
     "@types/react-dom": "^18.3.7",
     "@types/node": "^24.10.1",
     "eslint": "^10.15.0",
-    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.4.24",
-    "globals": "^16.5.0",
+    "globals": "^17.14.0",
     "prettier": "^3.10.1",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.48.1",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.73.0",
     "vite": "^8.3.8"
   },
   "engines": {

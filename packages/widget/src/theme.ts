@@ -7,5 +7,8 @@ export function themeVariables(config: WidgetConfig): Record<string, string> {
     "--ow-text": config.theme.textColor,
     "--ow-radius": config.theme.radius,
     "--ow-font-family": config.theme.fontFamily,
+    "--ow-logo-url": config.theme.logoUrl
+      ? `url(${JSON.stringify(config.theme.logoUrl)})`
+      : "none",
   };
 }

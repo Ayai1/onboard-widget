@@ -1,9 +1,15 @@
 /// <reference types="vite/client" />
-import React, { createElement } from "react";
+import { createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { FlowApp } from "./FlowApp";
 import { AnalyticsEmitter } from "./analytics";
-import { mergeConfig, validateConfig, type DeepPartial, type WidgetConfig, ConfigError } from "./config";
+import {
+  mergeConfig,
+  validateConfig,
+  type DeepPartial,
+  type WidgetConfig,
+  ConfigError,
+} from "./config";
 import styles from "./widget.css?inline";
 
 export { ConfigError, configSchema, stepIds, validateConfig } from "./config";
@@ -43,14 +49,23 @@ export interface WidgetHandle {
 export function init(options: InitOptions): WidgetHandle {
   let config = validateConfig(options.config);
   const analytics = new AnalyticsEmitter(config, options.onEvent);
-  const shadow = options.container.shadowRoot ?? options.container.attachShadow({ mode: "open" });
+  const shadow =
+    options.container.shadowRoot ??
+    options.container.attachShadow({ mode: "open" });
   const style = document.createElement("style");
   style.textContent = styles;
   const mount = document.createElement("div");
   mount.className = "ow-mount";
   shadow.append(style, mount);
   const root: Root = createRoot(mount);
-  root.render(createElement(FlowApp, { config, onComplete: options.onComplete, onError: options.onError, analytics }));
+  root.render(
+    createElement(FlowApp, {
+      config,
+      onComplete: options.onComplete,
+      onError: options.onError,
+      analytics,
+    }),
+  );
   return {
     destroy() {
       root.unmount();
@@ -62,9 +77,19 @@ export function init(options: InitOptions): WidgetHandle {
       try {
         config = mergeConfig(config, partial);
         analytics.updateConfig(config);
-        root.render(createElement(FlowApp, { config, onComplete: options.onComplete, onError: options.onError, analytics }));
+        root.render(
+          createElement(FlowApp, {
+            config,
+            onComplete: options.onComplete,
+            onError: options.onError,
+            analytics,
+          }),
+        );
       } catch (error) {
-        options.onError(error instanceof Error ? error : new Error(String(error)));
+        const normalized =
+          error instanceof Error ? error : new Error(String(error));
+        options.onError(normalized);
+        throw normalized;
       }
     },
   };
@@ -91,26 +116,48 @@ export class OnboardWidgetElement extends HTMLElement {
     this.handle?.destroy();
     try {
       const raw = this.getAttribute("config");
-      if (!raw) throw new ConfigError(["config: attribute is required and must contain JSON."]);
-      const config = validateConfig(JSON.parse(raw) as unknown);
+      if (!raw)
+        throw new ConfigError([
+          "config: attribute is required and must contain JSON.",
+        ]);
+      let value: unknown;
+      try {
+        value = JSON.parse(raw) as unknown;
+      } catch {
+        throw new ConfigError(["config: attribute must contain valid JSON."]);
+      }
+      const config = validateConfig(value);
       this.handle = init({
         container: this,
         config,
         onComplete: (result) => this.dispatch("onboard:complete", result),
-        onError: (error) => this.dispatch("onboard:error", { name: error.name, message: error.message }),
+        onError: (error) =>
+          this.dispatch("onboard:error", {
+            name: error.name,
+            message: error.message,
+          }),
         onEvent: (event) => this.dispatch("onboard:event", event),
       });
     } catch (error) {
-      const normalized = error instanceof Error ? error : new Error(String(error));
-      this.dispatch("onboard:error", { name: normalized.name, message: normalized.message });
+      const normalized =
+        error instanceof Error ? error : new Error(String(error));
+      this.dispatch("onboard:error", {
+        name: normalized.name,
+        message: normalized.message,
+      });
     }
   }
 
   private dispatch(name: string, detail: unknown) {
-    this.dispatchEvent(new CustomEvent(name, { detail, bubbles: true, composed: true }));
+    this.dispatchEvent(
+      new CustomEvent(name, { detail, bubbles: true, composed: true }),
+    );
   }
 }
 
-if (typeof customElements !== "undefined" && !customElements.get("onboard-widget")) {
+if (
+  typeof customElements !== "undefined" &&
+  !customElements.get("onboard-widget")
+) {
   customElements.define("onboard-widget", OnboardWidgetElement);
 }

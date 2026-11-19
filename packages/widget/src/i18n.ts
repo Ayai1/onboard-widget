@@ -16,22 +16,34 @@ export const messages = {
     submit: "Submit",
     submitting: "Submitting…",
     required: "This field is required.",
+    formErrorSummary: "Please correct the highlighted fields.",
     invalidEmail: "Enter a valid email address.",
     invalidDate: "Enter a valid date that is not in the future.",
+    configMissingSteps:
+      "This flow configuration is missing a required details or photo capture step.",
     selectCountry: "Select a country",
     startCamera: "Start camera",
     tryAgain: "Try again",
     settingsHelp: "Open settings help",
-    settingsHelpBody: "In your browser settings, allow camera access for this site, then return and try again.",
+    settingsHelpBody:
+      "In your browser settings, allow camera access for this site, then return and try again.",
     capture: "Capture photo",
     switchCamera: "Switch camera",
+    frontCamera: "Front camera",
+    rearCamera: "Rear camera",
+    processingImage: "Processing image…",
     uploadInstead: "Upload a photo instead",
-    cameraPermission: "Camera permission was denied. Allow camera access in your browser settings, then try again.",
+    cameraPermission:
+      "Camera permission was denied. Allow camera access in your browser settings, then try again.",
     noCamera: "No camera was found. Upload a photo instead.",
-    cameraBusy: "The camera is in use by another app. Close it and try again, or upload a photo.",
-    cameraConstraints: "This camera does not support the requested settings. Try another camera or upload a photo.",
-    insecureContext: "Camera access requires a secure connection. Open settings help or upload a photo instead.",
-    unsupportedBrowser: "Camera access is unavailable in this browser. Upload a photo instead.",
+    cameraBusy:
+      "The camera is in use by another app. Close it and try again, or upload a photo.",
+    cameraConstraints:
+      "This camera does not support the requested settings. Try another camera or upload a photo.",
+    insecureContext:
+      "Camera access requires a secure connection. Open settings help or upload a photo instead.",
+    unsupportedBrowser:
+      "Camera access is unavailable in this browser. Upload a photo instead.",
     tooDark: "The image looks dark. Consider improving the lighting.",
     tooBlurry: "The image looks blurry. Hold the camera steady and try again.",
     framing: "Align the document within the frame.",
@@ -57,22 +69,34 @@ export const messages = {
     submit: "إرسال",
     submitting: "جارٍ الإرسال…",
     required: "هذا الحقل مطلوب.",
+    formErrorSummary: "يرجى تصحيح الحقول المحددة.",
     invalidEmail: "أدخل عنوان بريد إلكتروني صالحًا.",
     invalidDate: "أدخل تاريخًا صالحًا ليس في المستقبل.",
+    configMissingSteps:
+      "إعدادات هذا التدفق لا تتضمن خطوة بيانات أو تصوير مطلوبة.",
     selectCountry: "اختر بلدًا",
     startCamera: "تشغيل الكاميرا",
     tryAgain: "حاول مرة أخرى",
     settingsHelp: "افتح مساعدة الإعدادات",
-    settingsHelpBody: "اسمح بالوصول إلى الكاميرا لهذا الموقع من إعدادات المتصفح، ثم عد وحاول مرة أخرى.",
+    settingsHelpBody:
+      "اسمح بالوصول إلى الكاميرا لهذا الموقع من إعدادات المتصفح، ثم عد وحاول مرة أخرى.",
     capture: "التقط صورة",
     switchCamera: "تبديل الكاميرا",
+    frontCamera: "الكاميرا الأمامية",
+    rearCamera: "الكاميرا الخلفية",
+    processingImage: "جارٍ تجهيز الصورة…",
     uploadInstead: "حمّل صورة بدلًا من ذلك",
-    cameraPermission: "تم رفض إذن الكاميرا. اسمح بالوصول إلى الكاميرا في إعدادات المتصفح ثم حاول مرة أخرى.",
+    cameraPermission:
+      "تم رفض إذن الكاميرا. اسمح بالوصول إلى الكاميرا في إعدادات المتصفح ثم حاول مرة أخرى.",
     noCamera: "لم يتم العثور على كاميرا. حمّل صورة بدلًا من ذلك.",
-    cameraBusy: "الكاميرا مستخدمة في تطبيق آخر. أغلقه وحاول مرة أخرى أو حمّل صورة.",
-    cameraConstraints: "الكاميرا لا تدعم الإعدادات المطلوبة. جرّب كاميرا أخرى أو حمّل صورة.",
-    insecureContext: "يتطلب الوصول إلى الكاميرا اتصالًا آمنًا. افتح مساعدة الإعدادات أو حمّل صورة.",
-    unsupportedBrowser: "الوصول إلى الكاميرا غير متاح في هذا المتصفح. حمّل صورة بدلًا من ذلك.",
+    cameraBusy:
+      "الكاميرا مستخدمة في تطبيق آخر. أغلقه وحاول مرة أخرى أو حمّل صورة.",
+    cameraConstraints:
+      "الكاميرا لا تدعم الإعدادات المطلوبة. جرّب كاميرا أخرى أو حمّل صورة.",
+    insecureContext:
+      "يتطلب الوصول إلى الكاميرا اتصالًا آمنًا. افتح مساعدة الإعدادات أو حمّل صورة.",
+    unsupportedBrowser:
+      "الوصول إلى الكاميرا غير متاح في هذا المتصفح. حمّل صورة بدلًا من ذلك.",
     tooDark: "تبدو الصورة مظلمة. جرّب تحسين الإضاءة.",
     tooBlurry: "تبدو الصورة غير واضحة. ثبّت الكاميرا وحاول مرة أخرى.",
     framing: "ضع المستند داخل الإطار.",
@@ -87,7 +111,10 @@ export const messages = {
 
 export type MessageKey = keyof (typeof messages)["en"];
 
-export function translate(config: WidgetConfig, key: MessageKey | string): string {
+export function translate(
+  config: WidgetConfig,
+  key: MessageKey | string,
+): string {
   const override = config.strings?.[key];
   if (override) return override;
   const table = messages[config.locale] as Record<string, string>;

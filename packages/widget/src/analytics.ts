@@ -18,7 +18,10 @@ export class AnalyticsEmitter {
   private readonly queue: WidgetEvent[] = [];
   private readonly pageHideHandler = () => this.flush();
 
-  constructor(config: WidgetConfig, private readonly onEvent?: (event: WidgetEvent) => void) {
+  constructor(
+    config: WidgetConfig,
+    private readonly onEvent?: (event: WidgetEvent) => void,
+  ) {
     this.config = config;
     window.addEventListener("pagehide", this.pageHideHandler);
   }
@@ -59,7 +62,10 @@ export class AnalyticsEmitter {
     const url = `${this.config.api.baseUrl.replace(/\/+$/, "")}/events`;
     try {
       if (typeof navigator.sendBeacon === "function") {
-        const accepted = navigator.sendBeacon(url, new Blob([body], { type: "application/json" }));
+        const accepted = navigator.sendBeacon(
+          url,
+          new Blob([body], { type: "application/json" }),
+        );
         if (accepted) return;
       }
     } catch {
@@ -67,7 +73,10 @@ export class AnalyticsEmitter {
     }
     void fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "X-Public-Key": this.config.api.publicKey },
+      headers: {
+        "Content-Type": "application/json",
+        "X-Public-Key": this.config.api.publicKey,
+      },
       body,
       keepalive: true,
     }).catch(() => undefined);
@@ -75,7 +84,8 @@ export class AnalyticsEmitter {
 }
 
 function createSessionId(): string {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto)
+    return crypto.randomUUID();
   return `ow-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 }
 

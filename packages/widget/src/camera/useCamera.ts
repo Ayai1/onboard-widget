@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CameraError, mapCameraError, type CameraErrorReason } from "./errors";
+import { mapCameraError, type CameraErrorReason } from "./errors";
 
 export type CameraMode = "environment" | "user";
 export interface CameraOptions {
@@ -56,7 +56,9 @@ export function useCamera({ mode }: CameraOptions) {
           facingMode: { ideal: mode },
           width: { ideal: 1920 },
           height: { ideal: 1080 },
-          ...(selectedDeviceRef.current ? { deviceId: { ideal: selectedDeviceRef.current } } : {}),
+          ...(selectedDeviceRef.current
+            ? { deviceId: { ideal: selectedDeviceRef.current } }
+            : {}),
         },
       };
       const nextStream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -73,15 +75,19 @@ export function useCamera({ mode }: CameraOptions) {
         setError(reason);
       }
     } finally {
-      if (mountedRef.current && requestId === requestIdRef.current) setStarting(false);
+      if (mountedRef.current && requestId === requestIdRef.current)
+        setStarting(false);
     }
   }, [mode, refreshDevices, stop]);
 
-  const selectDevice = useCallback((deviceId: string) => {
-    selectedDeviceRef.current = deviceId || undefined;
-    setSelectedDeviceId(deviceId);
-    if (streamRef.current) void start();
-  }, [start]);
+  const selectDevice = useCallback(
+    (deviceId: string) => {
+      selectedDeviceRef.current = deviceId || undefined;
+      setSelectedDeviceId(deviceId);
+      if (streamRef.current) void start();
+    },
+    [start],
+  );
 
   useEffect(() => {
     mountedRef.current = true;
@@ -112,5 +118,15 @@ export function useCamera({ mode }: CameraOptions) {
     if (videoRef.current) videoRef.current.srcObject = stream;
   }, [stream]);
 
-  return { videoRef, stream, error, devices, selectedDeviceId, starting, start, stop, selectDevice };
+  return {
+    videoRef,
+    stream,
+    error,
+    devices,
+    selectedDeviceId,
+    starting,
+    start,
+    stop,
+    selectDevice,
+  };
 }

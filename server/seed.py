@@ -12,7 +12,17 @@ def seed() -> int:
     for completed_count in (4, 3, 2, 1):
         session_id = f"demo-{uuid.uuid4().hex[:12]}"
         for index, step in enumerate(steps[:completed_count]):
-            records.append(("step_viewed", session_id, step, (now - timedelta(minutes=index)).isoformat(), "en", "desktop", None))
+            records.append(
+                (
+                    "step_viewed",
+                    session_id,
+                    step,
+                    (now - timedelta(minutes=index)).isoformat(),
+                    "en",
+                    "desktop",
+                    None,
+                )
+            )
     with _connect(settings.database_path) as connection:
         connection.executemany(
             "INSERT INTO events (event_type, session_id, step, timestamp, locale, device_class, reason) "

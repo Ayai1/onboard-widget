@@ -19,10 +19,16 @@ export class CameraError extends Error {
 export function mapCameraError(error: unknown): CameraErrorReason {
   if (typeof error === "object" && error !== null && "name" in error) {
     const name = String((error as { name?: unknown }).name);
-    if (name === "NotAllowedError" || name === "PermissionDeniedError") return "permission_denied";
-    if (name === "NotFoundError" || name === "DevicesNotFoundError") return "no_camera";
-    if (name === "NotReadableError" || name === "TrackStartError") return "camera_in_use";
-    if (name === "OverconstrainedError" || name === "ConstraintNotSatisfiedError") {
+    if (name === "NotAllowedError" || name === "PermissionDeniedError")
+      return "permission_denied";
+    if (name === "NotFoundError" || name === "DevicesNotFoundError")
+      return "no_camera";
+    if (name === "NotReadableError" || name === "TrackStartError")
+      return "camera_in_use";
+    if (
+      name === "OverconstrainedError" ||
+      name === "ConstraintNotSatisfiedError"
+    ) {
       return "unsupported_constraints";
     }
   }

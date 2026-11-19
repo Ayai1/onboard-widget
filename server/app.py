@@ -45,9 +45,13 @@ class Settings:
     def from_env(cls) -> Settings:
         root = Path(__file__).resolve().parent
         max_upload = int(os.getenv("MAX_UPLOAD_BYTES", str(5 * 1024 * 1024)))
-        cors = tuple(origin.strip() for origin in os.getenv(
-            "CORS_ORIGINS", "http://localhost:4173,http://127.0.0.1:4173"
-        ).split(",") if origin.strip())
+        cors = tuple(
+            origin.strip()
+            for origin in os.getenv(
+                "CORS_ORIGINS", "http://localhost:4173,http://127.0.0.1:4173"
+            ).split(",")
+            if origin.strip()
+        )
         return cls(
             database_path=Path(os.getenv("ONBOARD_DATABASE", str(root / "onboard.db"))),
             uploads_dir=Path(os.getenv("UPLOADS_DIR", str(root / "uploads"))),
@@ -61,7 +65,11 @@ class Settings:
 
 
 class SubmissionDetails(BaseModel):
-    model_config = ConfigDict(alias_generator=lambda name: re.sub(r"_([a-z])", lambda match: match[1].upper(), name), populate_by_name=True, extra="forbid")
+    model_config = ConfigDict(
+        alias_generator=lambda name: re.sub(r"_([a-z])", lambda match: match[1].upper(), name),
+        populate_by_name=True,
+        extra="forbid",
+    )
 
     full_name: str = Field(min_length=2, max_length=120)
     date_of_birth: date
@@ -93,7 +101,11 @@ class SubmissionDetails(BaseModel):
 
 
 class AnalyticsEvent(BaseModel):
-    model_config = ConfigDict(alias_generator=lambda name: re.sub(r"_([a-z])", lambda match: match[1].upper(), name), populate_by_name=True, extra="ignore")
+    model_config = ConfigDict(
+        alias_generator=lambda name: re.sub(r"_([a-z])", lambda match: match[1].upper(), name),
+        populate_by_name=True,
+        extra="ignore",
+    )
 
     type: str = Field(min_length=1, max_length=48)
     session_id: str = Field(min_length=1, max_length=80)
@@ -200,23 +212,82 @@ def create_app(settings: Settings | None = None, image_check: ImageCheck | None 
         if length and length.isdecimal() and int(length) > config.max_request_bytes:
             return JSONResponse(
                 status_code=413,
-                content={"error": {"code": "request_too_large", "message": "Request body exceeds the configured size limit."}},
+                content={
+                    "error": {
+                        "code": "request_too_large",
+                        "message": "Request body exceeds the configured size limit.",
+                    }
+                },
             )
-        return await call_next(request)
+        received = 0
+        original_receive = request.receive
+
+        async def limited_receive():
+            nonlocal received
+            message = await original_receive()
+            if message["type"] == "http.request":
+                received += len(message.get("body", b""))
+                if received > config.max_request_bytes:
+                    request.state.request_too_large = True
+                    return {"type": "http.request", "body": b"", "more_body": False}
+            return message
+
+        request._receive = limited_receive
+        response = await call_next(request)
+        if getattr(request.state, "request_too_large", False):
+            return JSONResponse(
+                status_code=413,
+                content={
+                    "error": {
+                        "code": "request_too_large",
+                        "message": "Request body exceeds the configured size limit.",
+                    }
+                },
+            )
+        return response
 
     @app.exception_handler(StarletteHTTPException)
     async def structured_http_error(_: Request, exc: StarletteHTTPException):
         detail = exc.detail
         if isinstance(detail, dict):
-            error = {"code": str(detail.get("code", "request_error")), "message": str(detail.get("message", "Request failed."))}
+            error = {
+                "code": str(detail.get("code", "request_error")),
+                "message": str(detail.get("message", "Request failed.")),
+            }
         else:
             error = {"code": "request_error", "message": str(detail)}
-        return JSONResponse(status_code=exc.status_code, content={"error": error}, headers=exc.headers)
+        return JSONResponse(
+            status_code=exc.status_code, content={"error": error}, headers=exc.headers
+        )
 
     @app.exception_handler(RequestValidationError)
     async def structured_validation_error(_: Request, exc: RequestValidationError):
-        details = [{"field": ".".join(str(part) for part in error["loc"]), "message": error["msg"]} for error in exc.errors()]
-        return JSONResponse(status_code=422, content={"error": {"code": "validation_error", "message": "Request validation failed.", "details": details}})
+        details = [
+            {"field": ".".join(str(part) for part in error["loc"]), "message": error["msg"]}
+            for error in exc.errors()
+        ]
+        return JSONResponse(
+            status_code=422,
+            content={
+                "error": {
+                    "code": "validation_error",
+                    "message": "Request validation failed.",
+                    "details": details,
+                }
+            },
+        )
+
+    @app.exception_handler(Exception)
+    async def structured_server_error(_: Request, __: Exception):
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": {
+                    "code": "internal_error",
+                    "message": "An unexpected server error occurred.",
+                }
+            },
+        )
 
     def check_rate(request: Request, route: str, limit: int) -> None:
         ip = request.client.host if request.client else "unknown"
@@ -231,7 +302,9 @@ def create_app(settings: Settings | None = None, image_check: ImageCheck | None 
     async def create_session():
         session_id = uuid.uuid4().hex
         with _connect(config.database_path) as connection:
-            connection.execute("INSERT INTO sessions (id, created_at) VALUES (?, ?)", (session_id, _now()))
+            connection.execute(
+                "INSERT INTO sessions (id, created_at) VALUES (?, ?)", (session_id, _now())
+            )
         return {"sessionId": session_id}
 
     @app.post("/sessions/{session_id}/documents")
@@ -245,11 +318,16 @@ def create_app(settings: Settings | None = None, image_check: ImageCheck | None 
         if kind not in {"id_front", "selfie"}:
             raise _problem(422, "invalid_document_kind", "kind must be id_front or selfie.")
         with _connect(config.database_path) as connection:
-            if connection.execute("SELECT 1 FROM sessions WHERE id = ?", (session_id,)).fetchone() is None:
+            if (
+                connection.execute("SELECT 1 FROM sessions WHERE id = ?", (session_id,)).fetchone()
+                is None
+            ):
                 raise _problem(404, "session_not_found", "Session was not found.")
         data = await file.read(config.max_upload_bytes + 1)
         if len(data) > config.max_upload_bytes:
-            raise _problem(413, "file_too_large", "The uploaded file exceeds the configured size limit.")
+            raise _problem(
+                413, "file_too_large", "The uploaded file exceeds the configured size limit."
+            )
         content_type = (file.content_type or "").lower().split(";", maxsplit=1)[0]
         signatures = {
             "image/jpeg": (b"\xff\xd8\xff", ".jpg"),
@@ -260,12 +338,18 @@ def create_app(settings: Settings | None = None, image_check: ImageCheck | None 
             raise _problem(415, "unsupported_media_type", "Only JPEG and PNG images are accepted.")
         magic, extension = signature
         if not data.startswith(magic):
-            raise _problem(400, "invalid_image", "The file signature does not match its JPEG or PNG content type.")
+            raise _problem(
+                400,
+                "invalid_image",
+                "The file signature does not match its JPEG or PNG content type.",
+            )
         document_id = uuid.uuid4().hex
         target = config.uploads_dir / f"{session_id}_{kind}_{document_id}{extension}"
         target.write_bytes(data)
         with _connect(config.database_path) as connection:
-            existing = connection.execute("SELECT path FROM documents WHERE session_id = ? AND kind = ?", (session_id, kind)).fetchone()
+            existing = connection.execute(
+                "SELECT path FROM documents WHERE session_id = ? AND kind = ?", (session_id, kind)
+            ).fetchone()
             connection.execute(
                 "INSERT INTO documents (id, session_id, kind, path, content_type, byte_size, created_at) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(session_id, kind) DO UPDATE SET "
@@ -281,15 +365,23 @@ def create_app(settings: Settings | None = None, image_check: ImageCheck | None 
     async def submit_session(session_id: str, details: SubmissionDetails, request: Request):
         check_rate(request, "submit", config.submit_rate_limit)
         with _connect(config.database_path) as connection:
-            session = connection.execute("SELECT id, reference FROM sessions WHERE id = ?", (session_id,)).fetchone()
+            session = connection.execute(
+                "SELECT id, reference FROM sessions WHERE id = ?", (session_id,)
+            ).fetchone()
             if session is None:
                 raise _problem(404, "session_not_found", "Session was not found.")
-            documents = connection.execute("SELECT kind, path FROM documents WHERE session_id = ?", (session_id,)).fetchall()
+            documents = connection.execute(
+                "SELECT kind, path FROM documents WHERE session_id = ?", (session_id,)
+            ).fetchall()
             kinds = {row["kind"] for row in documents}
             absent = {"id_front", "selfie"} - kinds
             if absent:
                 names = ", ".join(sorted(absent))
-                raise _problem(422, "documents_required", f"Upload both required documents before submitting. Missing: {names}.")
+                raise _problem(
+                    422,
+                    "documents_required",
+                    f"Upload both required documents before submitting. Missing: {names}.",
+                )
             results = {
                 row["kind"]: app.state.image_check.analyze(Path(row["path"]).read_bytes())
                 for row in documents
@@ -310,7 +402,15 @@ def create_app(settings: Settings | None = None, image_check: ImageCheck | None 
                 "INSERT INTO events (event_type, session_id, step, timestamp, locale, device_class, reason) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?)",
                 [
-                    (event.type, event.session_id, event.step, event.timestamp.isoformat(), event.locale, event.device_class, event.reason)
+                    (
+                        event.type,
+                        event.session_id,
+                        event.step,
+                        event.timestamp.isoformat(),
+                        event.locale,
+                        event.device_class,
+                        event.reason,
+                    )
                     for event in batch.events
                 ],
             )

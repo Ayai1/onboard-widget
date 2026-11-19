@@ -8,18 +8,18 @@ const packageDir = dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   plugins: [react()],
   build: {
+    manifest: true,
     lib: {
       entry: resolve(packageDir, "src/index.ts"),
       name: "OnboardWidget",
-      formats: ["es", "iife"],
-      fileName: (format) =>
-        format === "iife" ? "onboard-widget.umd.cjs" : "onboard-widget.js",
+      formats: ["es"],
+      fileName: () => "onboard-widget.js",
     },
     rollupOptions: {
-      external: ["react", "react-dom"],
+      external: ["react", "react-dom/client", "react/jsx-runtime"],
       output: {
-        globals: { react: "React", "react-dom": "ReactDOM" },
-        inlineDynamicImports: true,
+        globals: { react: "React", "react-dom/client": "ReactDOM" },
+        chunkFileNames: "chunks/[name]-[hash].js",
       },
     },
   },

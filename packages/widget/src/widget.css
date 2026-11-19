@@ -6,50 +6,219 @@
   contain: content;
 }
 
-*, *::before, *::after { box-sizing: border-box; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 .ow-root {
   color: var(--ow-text, #172033);
   background: var(--ow-background, #fff);
   font: 400 1rem/1.5 var(--ow-font-family, system-ui, sans-serif);
-  min-height: 16rem;
+  min-height: 32rem;
   border-radius: var(--ow-radius, 16px);
   padding: clamp(1rem, 5vw, 2rem);
   width: 100%;
 }
-.ow-root button, .ow-root input, .ow-root select { font: inherit; }
-.ow-root button, .ow-root input, .ow-root select { min-height: 44px; }
-.ow-root button { cursor: pointer; }
-.ow-root :focus-visible { outline: 3px solid var(--ow-primary, #2459d3); outline-offset: 3px; }
-.ow-root .ow-field { display: grid; gap: .35rem; margin-block: 1rem; }
-.ow-root .ow-error { color: #a21d26; }
-.ow-root .ow-actions { display: flex; gap: .75rem; justify-content: space-between; margin-block-start: 1.5rem; }
-.ow-root .ow-primary { color: #fff; background: var(--ow-primary, #2459d3); border: 0; border-radius: .5rem; padding: .7rem 1.1rem; }
-.ow-root .ow-muted { color: inherit; background: transparent; border: 1px solid currentColor; border-radius: .5rem; padding: .7rem 1.1rem; }
-.ow-root .ow-step { animation: ow-enter 160ms ease-out; }
-.ow-root .ow-progress { display: flex; flex-wrap: wrap; gap: .35rem 1rem; margin-block-end: 1.25rem; color: #536078; font-size: .875rem; }
-.ow-root .ow-progress [aria-current="step"] { color: var(--ow-primary, #2459d3); font-weight: 700; }
-.ow-root .ow-back { margin-block-end: 1rem; }
-.ow-root .ow-video-frame { position: relative; width: 100%; aspect-ratio: 4 / 3; background: #172033; border-radius: var(--ow-radius, 16px); overflow: hidden; }
-.ow-root .ow-video-frame video { display: block; width: 100%; height: 100%; object-fit: cover; }
-.ow-root .ow-video-frame.ow-selfie video { transform: scaleX(-1); }
-.ow-root .ow-camera-empty { position: absolute; inset: 0; background: linear-gradient(135deg, #26334c, #111827); }
-.ow-root .ow-frame-guide { position: absolute; inset: 12%; border: 2px solid #fff; border-radius: 10px; box-shadow: 0 0 0 999px rgb(0 0 0 / 20%); pointer-events: none; }
-.ow-root .ow-settings-help { margin-block: .5rem; color: inherit; }
-.ow-root .ow-settings-help summary { cursor: pointer; text-decoration: underline; min-height: 44px; display: flex; align-items: center; }
-.ow-root .ow-upload { display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
-.ow-root .ow-upload input { position: absolute; inline-size: 1px; block-size: 1px; opacity: 0; }
-.ow-root .ow-upload:focus-within { outline: 3px solid var(--ow-primary, #2459d3); outline-offset: 3px; }
-.ow-root .ow-camera-actions { justify-content: flex-start; flex-wrap: wrap; }
-.ow-root .ow-captured-preview img { display: block; width: 100%; max-height: 24rem; object-fit: contain; background: #172033; border-radius: var(--ow-radius, 16px); }
-.ow-root .ow-quality-hints { padding-inline-start: 1.25rem; color: #775000; }
-.ow-root .ow-review section { margin-block: 1.25rem; }
-.ow-root .ow-review-heading { display: flex; gap: .75rem; justify-content: space-between; align-items: center; }
-.ow-root .ow-review-heading h2 { margin-block: .5rem; font-size: 1.1rem; }
-.ow-root .ow-review dl { display: grid; grid-template-columns: minmax(6rem, .7fr) 1fr; gap: .35rem .75rem; }
-.ow-root .ow-review dt { font-weight: 600; }
-.ow-root .ow-review dd { margin: 0; overflow-wrap: anywhere; }
-.ow-root .ow-review-image { display: block; width: 100%; max-height: 18rem; object-fit: contain; background: #172033; border-radius: var(--ow-radius, 16px); }
-.ow-root [dir="rtl"] .ow-actions { flex-direction: row-reverse; }
-@keyframes ow-enter { from { opacity: .65; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-@media (prefers-reduced-motion: reduce) { .ow-root .ow-step { animation: none; } }
-@media (max-width: 360px) { .ow-root .ow-actions { gap: .5rem; flex-wrap: wrap; } .ow-root .ow-actions button { flex: 1 1 100%; } }
+.ow-root button,
+.ow-root input,
+.ow-root select {
+  font: inherit;
+}
+.ow-root button,
+.ow-root input,
+.ow-root select {
+  min-height: 44px;
+}
+.ow-root button {
+  cursor: pointer;
+}
+.ow-root :focus-visible {
+  outline: 3px solid var(--ow-primary, #2459d3);
+  outline-offset: 3px;
+}
+.ow-root .ow-field {
+  display: grid;
+  gap: 0.35rem;
+  margin-block: 1rem;
+}
+.ow-root .ow-error {
+  color: #a21d26;
+}
+.ow-root .ow-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+  margin-block-start: 1.5rem;
+}
+.ow-root .ow-primary {
+  color: #fff;
+  background: var(--ow-primary, #2459d3);
+  border: 0;
+  border-radius: 0.5rem;
+  padding: 0.7rem 1.1rem;
+}
+.ow-root .ow-muted {
+  color: inherit;
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: 0.5rem;
+  padding: 0.7rem 1.1rem;
+}
+.ow-root .ow-step {
+  animation: ow-enter 160ms ease-out;
+}
+.ow-root .ow-progress {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  margin-block-end: 1.25rem;
+  color: #536078;
+  font-size: 0.875rem;
+}
+.ow-root .ow-progress [aria-current="step"] {
+  color: var(--ow-primary, #2459d3);
+  font-weight: 700;
+}
+.ow-root .ow-back {
+  margin-block-end: 1rem;
+}
+.ow-root .ow-logo {
+  inline-size: 3rem;
+  block-size: 3rem;
+  margin-block-end: 0.75rem;
+  background-image: var(--ow-logo-url);
+  background-position: center;
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+.ow-root .ow-video-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: #172033;
+  border-radius: var(--ow-radius, 16px);
+  overflow: hidden;
+}
+.ow-root .ow-video-frame video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ow-root .ow-video-frame.ow-selfie video {
+  transform: scaleX(-1);
+}
+.ow-root .ow-camera-empty {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #26334c, #111827);
+}
+.ow-root .ow-frame-guide {
+  position: absolute;
+  inset: 12%;
+  border: 2px solid #fff;
+  border-radius: 10px;
+  box-shadow: 0 0 0 999px rgb(0 0 0 / 20%);
+  pointer-events: none;
+}
+.ow-root .ow-settings-help {
+  margin-block: 0.5rem;
+  color: inherit;
+}
+.ow-root .ow-settings-help summary {
+  cursor: pointer;
+  text-decoration: underline;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.ow-root .ow-upload {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.ow-root .ow-upload input {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  opacity: 0;
+}
+.ow-root .ow-upload:focus-within {
+  outline: 3px solid var(--ow-primary, #2459d3);
+  outline-offset: 3px;
+}
+.ow-root .ow-camera-actions {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+.ow-root .ow-captured-preview img {
+  display: block;
+  width: 100%;
+  max-height: 24rem;
+  object-fit: contain;
+  background: #172033;
+  border-radius: var(--ow-radius, 16px);
+}
+.ow-root .ow-quality-hints {
+  padding-inline-start: 1.25rem;
+  color: #775000;
+}
+.ow-root .ow-review section {
+  margin-block: 1.25rem;
+}
+.ow-root .ow-review-heading {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+  align-items: center;
+}
+.ow-root .ow-review-heading h2 {
+  margin-block: 0.5rem;
+  font-size: 1.1rem;
+}
+.ow-root .ow-review dl {
+  display: grid;
+  grid-template-columns: minmax(6rem, 0.7fr) 1fr;
+  gap: 0.35rem 0.75rem;
+}
+.ow-root .ow-review dt {
+  font-weight: 600;
+}
+.ow-root .ow-review dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.ow-root .ow-review-image {
+  display: block;
+  width: 100%;
+  max-height: 18rem;
+  object-fit: contain;
+  background: #172033;
+  border-radius: var(--ow-radius, 16px);
+}
+@keyframes ow-enter {
+  from {
+    opacity: 0.65;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ow-root .ow-step {
+    animation: none;
+  }
+}
+@media (max-width: 360px) {
+  .ow-root .ow-actions {
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .ow-root .ow-actions button {
+    flex: 1 1 100%;
+  }
+}

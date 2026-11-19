@@ -1,7 +1,6 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": { "@onboard/widget": ["../../packages/widget/src/index.ts"] }
   },
   "include": ["src", "vite.config.ts"]

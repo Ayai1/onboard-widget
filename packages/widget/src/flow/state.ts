@@ -41,8 +41,8 @@ export type FlowAction =
   | { type: "step_failed"; step: StepId; errors: Record<string, string> }
   | { type: "submit_started" }
   | { type: "session_created"; sessionId: string }
-  | { type: "submit_succeeded"; reference: string }
-  | { type: "submit_failed"; message: string };
+  | { type: "submit_succeeded"; reference: string; step: StepId }
+  | { type: "submit_failed"; message: string; step: StepId };
 
 export const emptyDetails: DetailsData = {
   fullName: "",
@@ -51,14 +51,22 @@ export const emptyDetails: DetailsData = {
   email: "",
 };
 
-export function createInitialFlowState(steps: StepId[], details: DetailsData = emptyDetails): FlowState {
+export function createInitialFlowState(
+  steps: StepId[],
+  details: DetailsData = emptyDetails,
+): FlowState {
   const firstStep = steps[0] ?? "details";
   return {
     steps: [...steps],
     currentStep: firstStep,
     details: { ...details },
     images: {},
-    status: { details: "pending", id_capture: "pending", selfie: "pending", review: "pending" },
+    status: {
+      details: "pending",
+      id_capture: "pending",
+      selfie: "pending",
+      review: "pending",
+    },
     errors: {},
     submission: "idle",
   };
@@ -79,13 +87,27 @@ export function flowReducer(state: FlowState, action: FlowAction): FlowState {
         ? { ...state, currentStep: action.step, errors: {} }
         : state;
     case "set_details":
-      return { ...state, details: action.details, errors: {} };
+      return {
+        ...state,
+        details: action.details,
+        status: { ...state.status, details: "pending" },
+        errors: {},
+      };
     case "set_image":
-      return { ...state, images: { ...state.images, [action.step]: action.image }, errors: {} };
+      return {
+        ...state,
+        images: { ...state.images, [action.step]: action.image },
+        status: { ...state.status, [action.step]: "pending" },
+        errors: {},
+      };
     case "clear_image": {
       const images = { ...state.images };
       delete images[action.step];
-      return { ...state, images };
+      return {
+        ...state,
+        images,
+        status: { ...state.status, [action.step]: "pending" },
+      };
     }
     case "step_valid":
       return {
@@ -104,9 +126,19 @@ export function flowReducer(state: FlowState, action: FlowAction): FlowState {
     case "session_created":
       return { ...state, sessionId: action.sessionId };
     case "submit_succeeded":
-      return { ...state, submission: "succeeded", reference: action.reference };
+      return {
+        ...state,
+        submission: "succeeded",
+        reference: action.reference,
+        status: { ...state.status, [action.step]: "valid" },
+      };
     case "submit_failed":
-      return { ...state, submission: "failed", errors: { submit: action.message } };
+      return {
+        ...state,
+        submission: "failed",
+        status: { ...state.status, [action.step]: "failed" },
+        errors: { submit: action.message },
+      };
   }
 }
 
@@ -114,10 +146,12 @@ export function validateDetails(details: DetailsData): Record<string, string> {
   const errors: Record<string, string> = {};
   if (!details.fullName.trim()) errors.fullName = "required";
   if (!details.dateOfBirth) errors.dateOfBirth = "required";
-  else if (!isValidDateOfBirth(details.dateOfBirth)) errors.dateOfBirth = "invalidDate";
+  else if (!isValidDateOfBirth(details.dateOfBirth))
+    errors.dateOfBirth = "invalidDate";
   if (!details.country) errors.country = "required";
   if (!details.email.trim()) errors.email = "required";
-  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(details.email)) errors.email = "invalidEmail";
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(details.email))
+    errors.email = "invalidEmail";
   return errors;
 }
 
@@ -125,10 +159,15 @@ function isValidDateOfBirth(value: string): boolean {
   const date = new Date(`${value}T00:00:00`);
   const today = new Date();
   today.setHours(23, 59, 59, 999);
-  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value && date <= today;
+  return (
+    Number.isFinite(date.getTime()) &&
+    date.toISOString().slice(0, 10) === value &&
+    date <= today
+  );
 }
 
-const storageKey = (config: WidgetConfig) => `onboard-widget-details:${config.api.baseUrl}:${config.api.publicKey}`;
+const storageKey = (config: WidgetConfig) =>
+  `onboard-widget-details:${config.api.baseUrl}:${config.api.publicKey}`;
 
 export function readStoredDetails(config: WidgetConfig): DetailsData {
   try {
@@ -142,7 +181,10 @@ export function readStoredDetails(config: WidgetConfig): DetailsData {
   }
 }
 
-export function persistDetails(config: WidgetConfig, details: DetailsData): void {
+export function persistDetails(
+  config: WidgetConfig,
+  details: DetailsData,
+): void {
   try {
     window.sessionStorage.setItem(storageKey(config), JSON.stringify(details));
   } catch {
