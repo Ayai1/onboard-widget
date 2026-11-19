@@ -36,8 +36,7 @@ export const configSchema = z
       .object({
         baseUrl: z
           .string()
-          .url()
-          .refine(isHttpUrl, "Use an HTTP or HTTPS URL."),
+          .refine(isHttpUrl, "Enter a valid HTTP or HTTPS URL."),
         publicKey: z.string().min(1),
       })
       .strict(),
