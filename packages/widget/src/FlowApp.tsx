@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef } from "react";
+import { lazy, Suspense, useEffect, useReducer, useRef } from "react";
 import type { WidgetConfig } from "./config";
 import { translate, textDirection } from "./i18n";
 import { themeVariables } from "./theme";
@@ -10,6 +10,8 @@ import {
   readStoredDetails,
   validateDetails,
 } from "./flow/state";
+
+const CameraStep = lazy(() => import("./CameraStep").then((module) => ({ default: module.CameraStep })));
 
 export interface FlowAppProps {
   config: WidgetConfig;
@@ -70,6 +72,20 @@ export function FlowApp({ config }: FlowAppProps) {
       onChange={(details) => dispatch({ type: "set_details", details })}
       onContinue={continueFromDetails}
     />
+  ) : state.currentStep === "id_capture" || state.currentStep === "selfie" ? (
+    <Suspense fallback={<p aria-live="polite">{translate(config, "startCamera")}</p>}>
+      <CameraStep
+        config={config}
+        kind={state.currentStep}
+        captured={state.images[state.currentStep]}
+        onCaptured={(image) => dispatch({ type: "set_image", step: state.currentStep as "id_capture" | "selfie", image })}
+        onContinue={() => {
+          dispatch({ type: "step_valid", step: state.currentStep });
+          goForward();
+        }}
+        onRetake={() => dispatch({ type: "clear_image", step: state.currentStep as "id_capture" | "selfie" })}
+      />
+    </Suspense>
   ) : (
     <section className="ow-step" aria-label={title}>
       <p>{state.currentStep === "review" ? translate(config, "review") : translate(config, "framing")}</p>

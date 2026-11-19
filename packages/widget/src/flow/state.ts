@@ -35,6 +35,7 @@ export type FlowAction =
   | { type: "navigate"; step: StepId }
   | { type: "set_details"; details: DetailsData }
   | { type: "set_image"; step: "id_capture" | "selfie"; image: CapturedImage }
+  | { type: "clear_image"; step: "id_capture" | "selfie" }
   | { type: "step_valid"; step: StepId }
   | { type: "step_failed"; step: StepId; errors: Record<string, string> }
   | { type: "submit_started" }
@@ -79,6 +80,11 @@ export function flowReducer(state: FlowState, action: FlowAction): FlowState {
       return { ...state, details: action.details, errors: {} };
     case "set_image":
       return { ...state, images: { ...state.images, [action.step]: action.image }, errors: {} };
+    case "clear_image": {
+      const images = { ...state.images };
+      delete images[action.step];
+      return { ...state, images };
+    }
     case "step_valid":
       return {
         ...state,
