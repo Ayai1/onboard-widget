@@ -22,7 +22,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: "npm run dev",
+      command: "node scripts/start-demo.mjs",
       url: "http://127.0.0.1:4173",
       reuseExistingServer: !process.env.CI,
     },
