@@ -12,6 +12,8 @@ import {
 } from "./flow/state";
 import { createSession, submitSession, uploadDocument } from "./api";
 import { ReviewStep } from "./ReviewStep";
+import type { AnalyticsEmitter } from "./analytics";
+import type { CameraErrorReason } from "./camera/errors";
 
 const CameraStep = lazy(() => import("./CameraStep").then((module) => ({ default: module.CameraStep })));
 
@@ -19,9 +21,10 @@ export interface FlowAppProps {
   config: WidgetConfig;
   onComplete?: (result: { sessionId: string; reference: string }) => void;
   onError?: (error: Error) => void;
+  analytics: AnalyticsEmitter;
 }
 
-export function FlowApp({ config, onComplete, onError }: FlowAppProps) {
+export function FlowApp({ config, onComplete, onError, analytics }: FlowAppProps) {
   const [state, dispatch] = useReducer(
     flowReducer,
     config,
@@ -46,6 +49,10 @@ export function FlowApp({ config, onComplete, onError }: FlowAppProps) {
     heading.current?.focus();
   }, [state.currentStep, state.submission]);
 
+  useEffect(() => {
+    analytics.emit("step_viewed", state.currentStep);
+  }, [analytics, state.currentStep]);
+
   useEffect(() => () => {
     for (const url of previewUrls.current) URL.revokeObjectURL(url);
     previewUrls.current.clear();
@@ -55,9 +62,11 @@ export function FlowApp({ config, onComplete, onError }: FlowAppProps) {
     const errors = validateDetails(state.details);
     if (Object.keys(errors).length) {
       dispatch({ type: "step_failed", step: "details", errors });
+      analytics.emit("step_failed", "details", "validation_failed");
       return;
     }
     dispatch({ type: "step_valid", step: "details" });
+    analytics.emit("step_completed", "details");
     goForward();
   };
 
@@ -80,11 +89,13 @@ export function FlowApp({ config, onComplete, onError }: FlowAppProps) {
       const problems: Record<string, string> = { ...detailErrors };
       for (const step of missing) problems[step] = "required";
       dispatch({ type: "step_failed", step: "review", errors: problems });
+      analytics.emit("step_failed", "review", "required_data_missing");
       const firstMissing = config.steps.find((step) => problems[step]);
       if (firstMissing && firstMissing !== "review") dispatch({ type: "navigate", step: firstMissing });
       return;
     }
     dispatch({ type: "submit_started" });
+    analytics.emit("submit_started", "review");
     try {
       const sessionId = state.sessionId ?? await createSession(config);
       if (!state.sessionId) dispatch({ type: "session_created", sessionId });
@@ -94,10 +105,14 @@ export function FlowApp({ config, onComplete, onError }: FlowAppProps) {
       if (selfieImage) await uploadDocument(config, sessionId, "selfie", selfieImage);
       const reference = await submitSession(config, sessionId, state.details);
       dispatch({ type: "submit_succeeded", reference });
+      analytics.emit("step_completed", "review");
+      analytics.emit("submit_succeeded", "review");
       onComplete?.({ sessionId, reference });
     } catch (error) {
       const message = error instanceof Error ? error.message : translate(config, "error");
       dispatch({ type: "submit_failed", message });
+      analytics.emit("step_failed", "review", "submit_error");
+      analytics.emit("submit_failed", "review", "request_failed");
       onError?.(error instanceof Error ? error : new Error(message));
     }
   };
@@ -143,6 +158,10 @@ export function FlowApp({ config, onComplete, onError }: FlowAppProps) {
           }
           dispatch({ type: "clear_image", step: state.currentStep as "id_capture" | "selfie" });
         }}
+        onCameraError={(reason: CameraErrorReason) => {
+          if (reason === "permission_denied") analytics.emit("camera_permission_denied", state.currentStep as "id_capture" | "selfie", reason);
+        }}
+        onUploadFallback={() => analytics.emit("upload_fallback_used", state.currentStep as "id_capture" | "selfie")}
       />
     </Suspense>
   ) : state.currentStep === "review" ? (

@@ -1,6 +1,8 @@
+/// <reference types="vite/client" />
 import React, { createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { FlowApp } from "./FlowApp";
+import { AnalyticsEmitter } from "./analytics";
 import { mergeConfig, validateConfig, type DeepPartial, type WidgetConfig, ConfigError } from "./config";
 import styles from "./widget.css?inline";
 
@@ -8,6 +10,7 @@ export { ConfigError, configSchema, stepIds, validateConfig } from "./config";
 export type { DeepPartial, StepId, WidgetConfig } from "./config";
 export { messages, stepLabel, textDirection, translate } from "./i18n";
 export { themeVariables } from "./theme";
+export { AnalyticsEmitter } from "./analytics";
 
 export interface CompleteResult {
   sessionId: string;
@@ -39,6 +42,7 @@ export interface WidgetHandle {
 
 export function init(options: InitOptions): WidgetHandle {
   let config = validateConfig(options.config);
+  const analytics = new AnalyticsEmitter(config, options.onEvent);
   const shadow = options.container.shadowRoot ?? options.container.attachShadow({ mode: "open" });
   const style = document.createElement("style");
   style.textContent = styles;
@@ -46,17 +50,19 @@ export function init(options: InitOptions): WidgetHandle {
   mount.className = "ow-mount";
   shadow.append(style, mount);
   const root: Root = createRoot(mount);
-  root.render(createElement(FlowApp, { config, onComplete: options.onComplete, onError: options.onError }));
+  root.render(createElement(FlowApp, { config, onComplete: options.onComplete, onError: options.onError, analytics }));
   return {
     destroy() {
       root.unmount();
+      analytics.destroy();
       style.remove();
       mount.remove();
     },
     updateConfig(partial) {
       try {
         config = mergeConfig(config, partial);
-        root.render(createElement(FlowApp, { config, onComplete: options.onComplete, onError: options.onError }));
+        analytics.updateConfig(config);
+        root.render(createElement(FlowApp, { config, onComplete: options.onComplete, onError: options.onError, analytics }));
       } catch (error) {
         options.onError(error instanceof Error ? error : new Error(String(error)));
       }

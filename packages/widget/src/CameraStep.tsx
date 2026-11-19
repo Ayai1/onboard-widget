@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { WidgetConfig } from "./config";
 import { translate } from "./i18n";
 import { getQualityHints, prepareUploadedFile, resizeAndCompress } from "./camera/image";
 import { useCamera } from "./camera/useCamera";
 import type { CapturedImage } from "./flow/state";
+import type { CameraErrorReason } from "./camera/errors";
 
 export interface CameraStepProps {
   config: WidgetConfig;
@@ -12,6 +13,8 @@ export interface CameraStepProps {
   onCaptured: (image: CapturedImage) => void;
   onContinue: () => void;
   onRetake: () => void;
+  onCameraError: (reason: CameraErrorReason) => void;
+  onUploadFallback: () => void;
 }
 
 const errorText: Record<string, string> = {
@@ -23,17 +26,27 @@ const errorText: Record<string, string> = {
   unsupported_browser: "unsupportedBrowser",
 };
 
-export function CameraStep({ config, kind, captured, onCaptured, onContinue, onRetake }: CameraStepProps) {
+export function CameraStep({ config, kind, captured, onCaptured, onContinue, onRetake, onCameraError, onUploadFallback }: CameraStepProps) {
   const isSelfie = kind === "selfie";
   const camera = useCamera({ mode: isSelfie ? "user" : "environment" });
   const [videoReady, setVideoReady] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [fileError, setFileError] = useState("");
+  const lastReportedError = useRef<string | null>(null);
   const maxDimension = isSelfie ? config.camera.selfieMaxDimension : config.camera.idMaxDimension;
 
   useEffect(() => {
     setVideoReady(false);
   }, [camera.stream]);
+
+  useEffect(() => {
+    if (camera.error && camera.error !== lastReportedError.current) {
+      lastReportedError.current = camera.error;
+      onCameraError(camera.error);
+    } else if (!camera.error) {
+      lastReportedError.current = null;
+    }
+  }, [camera.error, onCameraError]);
 
   const acceptImage = async (prepared: { blob: Blob; width: number; height: number; byteSize: number }) => {
     const hints = await getQualityHints(prepared.blob);
@@ -163,6 +176,7 @@ export function CameraStep({ config, kind, captured, onCaptured, onContinue, onR
             accept="image/*"
             capture={isSelfie ? "user" : "environment"}
             onChange={(event) => {
+              if (event.currentTarget.files?.[0]) onUploadFallback();
               void upload(event.currentTarget.files?.[0]);
               event.currentTarget.value = "";
             }}

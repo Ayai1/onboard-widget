@@ -7,7 +7,7 @@
     "apps/*"
   ],
   "scripts": {
-    "dev": "npm run dev --workspace @onboard/demo",
+    "dev": "npm run build --workspace @onboard/widget && npm run dev --workspace @onboard/demo",
     "build": "npm run build --workspace @onboard/widget && npm run build --workspace @onboard/demo",
     "lint": "eslint . && prettier --check . && python -m ruff check server",
     "format:check": "prettier --check .",

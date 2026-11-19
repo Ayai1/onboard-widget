@@ -1,0 +1,26 @@
+:root { font-family: Inter, ui-sans-serif, system-ui, sans-serif; color: #172033; background: #eef2f8; font-synthesis: none; }
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; min-height: 100vh; }
+button, select { font: inherit; min-height: 44px; }
+a { color: #2459d3; }
+.demo-page { width: min(100% - 2rem, 860px); margin-inline: auto; padding-block: 2rem 4rem; }
+.demo-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-block-end: 1.25rem; }
+.demo-header h1 { margin: .15rem 0 0; font-size: clamp(1.75rem, 7vw, 2.5rem); }
+.eyebrow { margin: 0; color: #5c687a; text-transform: uppercase; letter-spacing: .08em; font-size: .75rem; font-weight: 700; }
+.demo-notice { border-inline-start: 4px solid #bc5b00; background: #fff4e5; padding: .85rem 1rem; border-radius: .4rem; font-weight: 700; }
+.demo-controls { display: flex; flex-wrap: wrap; gap: 1rem; margin-block: 1.25rem; }
+.demo-controls label { display: grid; gap: .35rem; font-weight: 650; }
+.demo-controls select { border: 1px solid #abb5c4; border-radius: .5rem; padding-inline: .75rem; background: #fff; min-width: 10rem; }
+.widget-panel, .event-panel { background: white; border-radius: 1rem; padding: clamp(1rem, 4vw, 2rem); box-shadow: 0 12px 36px rgb(27 43 73 / 8%); }
+.event-panel { margin-block-start: 1.5rem; }
+.event-panel h2 { font-size: 1rem; }
+.event-panel ul { padding-inline-start: 1.25rem; }
+.demo-error { color: #a21d26; background: #fff0f0; border-radius: .5rem; padding: .8rem; overflow-wrap: anywhere; }
+.funnel-list { display: grid; gap: 1rem; }
+.funnel-step { background: #fff; border-radius: .8rem; padding: 1rem; box-shadow: 0 8px 24px rgb(27 43 73 / 6%); }
+.funnel-label { display: flex; justify-content: space-between; align-items: baseline; gap: .75rem; }
+.funnel-label h2 { text-transform: capitalize; font-size: 1.1rem; margin: 0; }
+.funnel-label span, .funnel-step p { color: #5c687a; font-size: .875rem; }
+.funnel-track { height: .7rem; background: #e0e6ef; border-radius: 999px; overflow: hidden; margin-block: .85rem .5rem; }
+.funnel-track span { height: 100%; display: block; background: #2459d3; border-radius: inherit; }
+@media (max-width: 420px) { .demo-header { align-items: flex-start; flex-direction: column; } .demo-page { width: min(100% - 1rem, 860px); } }
