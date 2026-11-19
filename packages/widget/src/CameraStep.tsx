@@ -39,6 +39,7 @@ export function CameraStep({ config, kind, captured, onCaptured, onContinue, onR
     const hints = await getQualityHints(prepared.blob);
     const previewUrl = URL.createObjectURL(prepared.blob);
     onCaptured({ ...prepared, previewUrl, hints });
+    camera.stop();
   };
 
   const capture = async () => {

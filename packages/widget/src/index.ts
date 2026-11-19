@@ -46,7 +46,7 @@ export function init(options: InitOptions): WidgetHandle {
   mount.className = "ow-mount";
   shadow.append(style, mount);
   const root: Root = createRoot(mount);
-  root.render(createElement(FlowApp, { config }));
+  root.render(createElement(FlowApp, { config, onComplete: options.onComplete, onError: options.onError }));
   return {
     destroy() {
       root.unmount();
@@ -56,7 +56,7 @@ export function init(options: InitOptions): WidgetHandle {
     updateConfig(partial) {
       try {
         config = mergeConfig(config, partial);
-        root.render(createElement(FlowApp, { config }));
+        root.render(createElement(FlowApp, { config, onComplete: options.onComplete, onError: options.onError }));
       } catch (error) {
         options.onError(error instanceof Error ? error : new Error(String(error)));
       }

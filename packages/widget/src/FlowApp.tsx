@@ -10,6 +10,8 @@ import {
   readStoredDetails,
   validateDetails,
 } from "./flow/state";
+import { createSession, submitSession, uploadDocument } from "./api";
+import { ReviewStep } from "./ReviewStep";
 
 const CameraStep = lazy(() => import("./CameraStep").then((module) => ({ default: module.CameraStep })));
 
@@ -19,13 +21,14 @@ export interface FlowAppProps {
   onError?: (error: Error) => void;
 }
 
-export function FlowApp({ config }: FlowAppProps) {
+export function FlowApp({ config, onComplete, onError }: FlowAppProps) {
   const [state, dispatch] = useReducer(
     flowReducer,
     config,
     (initialConfig) => createInitialFlowState(initialConfig.steps, readStoredDetails(initialConfig)),
   );
   const heading = useRef<HTMLHeadingElement>(null);
+  const previewUrls = useRef(new Set<string>());
   const style = themeVariables(config) as React.CSSProperties;
   const stepIndex = state.steps.indexOf(state.currentStep);
 
@@ -41,7 +44,12 @@ export function FlowApp({ config }: FlowAppProps) {
 
   useEffect(() => {
     heading.current?.focus();
-  }, [state.currentStep]);
+  }, [state.currentStep, state.submission]);
+
+  useEffect(() => () => {
+    for (const url of previewUrls.current) URL.revokeObjectURL(url);
+    previewUrls.current.clear();
+  }, []);
 
   const continueFromDetails = () => {
     const errors = validateDetails(state.details);
@@ -63,8 +71,43 @@ export function FlowApp({ config }: FlowAppProps) {
     if (previous) dispatch({ type: "navigate", step: previous });
   };
 
-  const title = translate(config, state.currentStep);
-  const content = state.currentStep === "details" ? (
+  const submit = async () => {
+    const detailErrors = validateDetails(state.details);
+    const missing = ["id_capture", "selfie"].filter(
+      (step) => config.steps.includes(step as "id_capture" | "selfie") && !state.images[step as "id_capture" | "selfie"],
+    );
+    if (Object.keys(detailErrors).length || missing.length) {
+      const problems: Record<string, string> = { ...detailErrors };
+      for (const step of missing) problems[step] = "required";
+      dispatch({ type: "step_failed", step: "review", errors: problems });
+      const firstMissing = config.steps.find((step) => problems[step]);
+      if (firstMissing && firstMissing !== "review") dispatch({ type: "navigate", step: firstMissing });
+      return;
+    }
+    dispatch({ type: "submit_started" });
+    try {
+      const sessionId = state.sessionId ?? await createSession(config);
+      if (!state.sessionId) dispatch({ type: "session_created", sessionId });
+      const idImage = state.images.id_capture;
+      const selfieImage = state.images.selfie;
+      if (idImage) await uploadDocument(config, sessionId, "id_front", idImage);
+      if (selfieImage) await uploadDocument(config, sessionId, "selfie", selfieImage);
+      const reference = await submitSession(config, sessionId, state.details);
+      dispatch({ type: "submit_succeeded", reference });
+      onComplete?.({ sessionId, reference });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : translate(config, "error");
+      dispatch({ type: "submit_failed", message });
+      onError?.(error instanceof Error ? error : new Error(message));
+    }
+  };
+
+  const title = translate(config, state.submission === "succeeded" ? "done" : state.currentStep);
+  const content = state.submission === "succeeded" ? (
+    <section className="ow-done">
+      <p>{translate(config, "reference")}: <strong>{state.reference}</strong></p>
+    </section>
+  ) : state.currentStep === "details" ? (
     <DetailsStep
       config={config}
       value={state.details}
@@ -78,14 +121,40 @@ export function FlowApp({ config }: FlowAppProps) {
         config={config}
         kind={state.currentStep}
         captured={state.images[state.currentStep]}
-        onCaptured={(image) => dispatch({ type: "set_image", step: state.currentStep as "id_capture" | "selfie", image })}
+        onCaptured={(image) => {
+          previewUrls.current.add(image.previewUrl);
+          const oldUrl = state.images[state.currentStep as "id_capture" | "selfie"]?.previewUrl;
+          if (oldUrl) {
+            URL.revokeObjectURL(oldUrl);
+            previewUrls.current.delete(oldUrl);
+          }
+          dispatch({ type: "set_image", step: state.currentStep as "id_capture" | "selfie", image });
+        }}
         onContinue={() => {
           dispatch({ type: "step_valid", step: state.currentStep });
-          goForward();
+          if (state.steps[stepIndex + 1]) goForward();
+          else void submit();
         }}
-        onRetake={() => dispatch({ type: "clear_image", step: state.currentStep as "id_capture" | "selfie" })}
+        onRetake={() => {
+          const oldUrl = state.images[state.currentStep as "id_capture" | "selfie"]?.previewUrl;
+          if (oldUrl) {
+            URL.revokeObjectURL(oldUrl);
+            previewUrls.current.delete(oldUrl);
+          }
+          dispatch({ type: "clear_image", step: state.currentStep as "id_capture" | "selfie" });
+        }}
       />
     </Suspense>
+  ) : state.currentStep === "review" ? (
+    <ReviewStep
+      config={config}
+      details={state.details}
+      images={state.images}
+      errors={state.errors}
+      submitting={state.submission === "submitting"}
+      onEdit={(step) => dispatch({ type: "navigate", step })}
+      onSubmit={() => void submit()}
+    />
   ) : (
     <section className="ow-step" aria-label={title}>
       <p>{state.currentStep === "review" ? translate(config, "review") : translate(config, "framing")}</p>
@@ -108,7 +177,7 @@ export function FlowApp({ config }: FlowAppProps) {
       </div>
       <div className="ow-step" key={state.currentStep}>
         <h1 ref={heading} tabIndex={-1}>{title}</h1>
-        {stepIndex > 0 && (
+        {state.submission !== "succeeded" && stepIndex > 0 && (
           <button className="ow-muted ow-back" type="button" onClick={goBack}>
             {translate(config, "back")}
           </button>

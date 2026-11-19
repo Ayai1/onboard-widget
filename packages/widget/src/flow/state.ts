@@ -27,6 +27,7 @@ export interface FlowState {
   status: Record<StepId, StepStatus>;
   errors: Record<string, string>;
   submission: SubmissionStatus;
+  sessionId?: string;
   reference?: string;
 }
 
@@ -39,6 +40,7 @@ export type FlowAction =
   | { type: "step_valid"; step: StepId }
   | { type: "step_failed"; step: StepId; errors: Record<string, string> }
   | { type: "submit_started" }
+  | { type: "session_created"; sessionId: string }
   | { type: "submit_succeeded"; reference: string }
   | { type: "submit_failed"; message: string };
 
@@ -99,6 +101,8 @@ export function flowReducer(state: FlowState, action: FlowAction): FlowState {
       };
     case "submit_started":
       return { ...state, submission: "submitting", errors: {} };
+    case "session_created":
+      return { ...state, sessionId: action.sessionId };
     case "submit_succeeded":
       return { ...state, submission: "succeeded", reference: action.reference };
     case "submit_failed":
